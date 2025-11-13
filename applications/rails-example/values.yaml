@@ -12,6 +12,12 @@ deployments:
     # port: <custom-port> (if you don't want to use port 80)
     # command: <custom-command> (if you don't want to run bin/rails server)
 resources:
+  redis:
+    sentinels: 3
+    replicas: 2
+    memory: 100Mi # must use Gi or Mi format
+    cpu: 250m
+    disk: 500Mi
   postgres:
     replicas: 2
     memory: 1Gi
@@ -37,4 +43,8 @@ envFrom:
   - secretRef:
       name: rails-example # Create a dedicated application secret with k secrets:create rails-example
 env:
+  - { name: REDIS_URL, value: "redis://rails-example-redis-master.default.svc:6379" }
+  # NOTE: Redis clients do not support SENTINEL_URL out of the box, you'll have to write your own
+  # initialization logic. We recommend using it instead of REDIS_URL for 0 downtime failovers.
+  - { name: SENTINEL_URL, value: "redis-sentinel://rfs-rails-example:26379/mymaster" }
   - { name: DATABASE_URL, valueFrom: { secretKeyRef: { name: rails-example-app, key: uri } } }
