@@ -1,0 +1,58 @@
+# Creates a generic Deployment. Command to run must be configured via .deployments.sidekiq.command.
+#
+# Example values.yaml:
+# image: docker.io/maro-mnd/rails-example:latest
+# deployments:
+#   sidekiq:
+#     replicas: 1
+#     memory: 512Mi
+#     cpu: 250m
+#     env: [] # Put ENV which should only apply to the sidekiq deployment here
+#     # command: <custom-command> (if you don't want to bundle exec sidekiq)
+# envFrom:
+#   - secretRef:
+#       name: rails-example # Create a dedicated application secret with k secrets:create rails-example
+# env: [] # Put ENV which applies to all deployments here
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-sidekiq
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: {{ .Values.deployments.sidekiq.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-sidekiq
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-sidekiq
+      annotations:
+        linkerd.io/inject: enabled
+        kubectl.kubernetes.io/default-container: sidekiq
+    spec:
+      containers:
+        - name: sidekiq
+          image: {{ .Values.image }}
+          command:
+            {{- range .Values.deployments.sidekiq.command | default "bundle exec sidekiq" | split " " }}
+            - {{ . | quote }}
+            {{- end }}
+          # NOTE: We avoid putting a limit on CPU since Kubernetes throttling kills performance and CPU averages
+          # tends to be low, so we can allow some pods to burst when needed. Adjust as you see fit.
+          resources:
+            requests:
+              memory: {{ .Values.deployments.sidekiq.memory }}
+              cpu: {{ .Values.deployments.sidekiq.cpu }}
+            limits:
+              memory: {{ .Values.deployments.sidekiq.memory }}
+          envFrom: {{ .Values.envFrom | toYaml | nindent 12 }}
+          env:
+            {{- if .Values.env }}
+            {{- .Values.env | toYaml | nindent 12 }}
+            {{- end }}
+            {{- if .Values.deployments.sidekiq.env }}
+            {{- .Values.deployments.sidekiq.env | toYaml | nindent 12 }}
+            {{- end }}

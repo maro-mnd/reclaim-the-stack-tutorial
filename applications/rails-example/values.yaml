@@ -1,5 +1,11 @@
 image: docker.io/reclaimthestack/rails-example:latest
 deployments:
+  sidekiq:
+    replicas: 1
+    memory: 512Mi
+    cpu: 250m
+    env: [] # Put ENV which should only apply to the sidekiq deployment here
+    # command: <custom-command> (if you don't want to bundle exec sidekiq)
   web:
     replicas: 1
     memory: 512Mi
