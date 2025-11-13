@@ -1,0 +1,18 @@
+image: docker.io/reclaimthestack/rails-example:latest
+deployments:
+  web:
+    replicas: 1
+    memory: 512Mi
+    cpu: 250m
+    # Put ENV which should only apply to the web deployment here
+    env:
+      - name: WEB_CONCURRENCY
+        value: "2"
+    # readinessProbePath: /up # when this path returns 200 the pod will be considered ready
+    # port: <custom-port> (if you don't want to use port 80)
+    # command: <custom-command> (if you don't want to run bin/rails server)
+resources: {}
+envFrom:
+  - secretRef:
+      name: rails-example # Create a dedicated application secret with k secrets:create rails-example
+env: []

@@ -5,6 +5,8 @@ no-autoupdate: true
 # For more about ingress rules, see
 # https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/configuration/ingress
 ingress:
+  - hostname: rails-example.kubernetes-tutorial.mynewsdesk.dev
+    service: http://rails-example-web
   - hostname: argocd.kubernetes-tutorial.mynewsdesk.dev
     service: https://argocd-server.argocd.svc
     originRequest:
